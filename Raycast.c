@@ -36,6 +36,8 @@ unsigned char r,g,b;
 
 int line = 1;
 Object object[128];
+double cam_height, cam_width;
+
 
 double sqr(double v) {
   return v*v;
@@ -115,9 +117,10 @@ double plane_intersection(double* v1, double* v2, double* C, double* n){
 
 void do_raycast(int width, int height;){
     ppm_data current;
-    ppm_data* ptr = buffer;
-    double x,y,z;
+    ppm_data* ptr;
+    double x,y,z,ph,pw;
     int height, width, i,j;
+
 
     double v1[3] = {0,0,0};//makes the origin array
     double v2[3] = {0,0,0};//makes the direction array
@@ -137,7 +140,7 @@ void do_raycast(int width, int height;){
     j = height;
 
     //get the pixel size by dividing camera width and height by inputs width and height
-    
+    ph = 0;
 
 }
 
@@ -319,11 +322,12 @@ void read_scene(char* filename) {
 
                 if((strcmp(key, "width") == 0)){
                     object[index].camera.width = value;
+                    cam_width= value;
                 }
 
                 else if(strcmp(key, "height") == 0){
                     object[index].camera.height = value;
-
+                    cam_height= value;
                 }else{
 
                     fprintf(stderr, "Not a valid variable for Camera\n");}
@@ -392,6 +396,7 @@ void read_scene(char* filename) {
 
 
 
+
 int main(int argc, char** argv){
     Object scene[128];
     int width, height;
@@ -420,6 +425,10 @@ int main(int argc, char** argv){
         fprintf(stderr, "Not valid output file type");
         return -1;
     }
+    ppm_data* buffer = (ppm_data*)malloc(sizeof(ppm_data*) * width * height + 1);
+    do_raycast(width,height);
+
+
 	//writePPM(argv[4],)
 	return 0;
 
