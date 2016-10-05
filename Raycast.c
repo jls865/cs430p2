@@ -174,12 +174,12 @@ void do_raycast(int width, int height, ppm_data* pdata){
 
                 //plane
                 if(object[c].type ==0){
-                    plane_intersection(v1,v2,object[c].color,v3);
+                    plane_intersection(v1,v2,object[c].plane.color,v3);
 
                 }
                 //sphere
                 else if(object[c].type == 1){
-                    sphere_intersection(v1,v2,object[c].sphere.color,object[c].sphere.radius)
+                    sphere_intersection(v1,v2,object[c].sphere.color,object[c].sphere.radius);
 
                 }
                 //camera
@@ -365,14 +365,16 @@ void read_scene(char* filename) {
 	  skip_ws(json);
 	  expect_c(json, ':');
 	  skip_ws(json);
+	  //if key word is found conditional
 	  if ((strcmp(key, "width") == 0) ||
 	      (strcmp(key, "height") == 0) ||
 	      (strcmp(key, "radius") == 0)) {
             double value = next_number(json);
-
+            //if its a sphere set value of radius
             if(object[index].type ==1){
                 object[index].sphere.radius = value;
             }
+            //if its a camera check height/width and assign values accordingly
             else if(object[index].type == 2){
 
                 if((strcmp(key, "width") == 0)){
@@ -390,11 +392,12 @@ void read_scene(char* filename) {
             }else{
                     fprintf(stderr, "Not a valid type of object for width height or radius\n");}
         }
+        //if the key is found conditionals
         else if ((strcmp(key, "color") == 0) ||
 		     (strcmp(key, "position") == 0) ||
 		     (strcmp(key, "normal") == 0)) {
                 double* value = next_vector(json);
-
+                // if its a plane assign vector value by checking key
                 if(object[index].type == 0){
                     if(strcmp(key, "color") == 0){
                         object[index].plane.color = value;
@@ -407,7 +410,7 @@ void read_scene(char* filename) {
                         object[index].plane.normal = value;
 
                     }else{fprintf(stderr, "Not a valid variable for plane\n");}
-
+                    //if its a sphere set the vectors.
                 }else if(object[index].type == 1){
 
                     if(strcmp(key, "color")== 0){
@@ -456,19 +459,20 @@ int main(int argc, char** argv){
     Object scene[128];
     ppm_data* data;
     int width, height;
-	if(argc!=5){
+    //if too little arguments throw this
+	if(argc>5){
         fprintf(stderr, "Not valid input for program Raycast.c");
         return -1;
 	}
-
+    //
 	char* temp = argv[3];
 	if(strstr(temp, ".json")!=0){
         fprintf(stderr, "Not valid input file type");
         return -1;
 	}
 
-	width = atoi(argv[1]);
-	height = atoi(argv[2]);
+	width = argv[1];
+	height = argv[2];
 
 
 	if(width <=0 || height <=0){
