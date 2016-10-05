@@ -37,7 +37,7 @@ unsigned char r,g,b;
 int line = 1;
 Object object[128];
 
-static inline double sqr(double v) {
+double sqr(double v) {
   return v*v;
 }
 
@@ -46,12 +46,12 @@ double dot_product(double* v1, double* v2, int n){
     int i;
     for(i=0;i<n;i++){
         result += v1[i]*v2[i];
-        return result;
     }
+    return result;
 }
 //hello
 
-static inline void normalize(double* v) {
+void normalize(double* v) {
   double len = sqrt(sqr(v[0]) + sqr(v[1]) + sqr(v[2]));
   v[0] /= len;
   v[1] /= len;
@@ -61,24 +61,84 @@ static inline void normalize(double* v) {
 int writePPM(FILE* destination, ppm_data* data, int width, int height){
     FILE* fh = fopen(destination, "w");
     fprintf(fh, "P6 %d %d 255\n", width, height);
-    fwrite(buffer, sizeof(Pixel), width*height, fh);
+    fwrite(data, sizeof(ppm_data), width*height, fh);
     fclose(fh);
 }
 
-double sphere_intersection(double* Ro, double* Rd, double* C, double r){
+double sphere_intersection(double* v1, double* v2, double* C, double r){
+    double x,y,z,quad,dist1,dist2;
+    x = sqr(v2[0])+sqr(v2[1])+sqr(v2[2]);
+    y = (2 * (v1[0] * v2[0] - v2[0] * C[0] + v1[1] * v2[1] - v2[1] * C[1] + v1[2] * v2[2] - v2[2] * C[2]));
+	z = sqr(v1[0]) - 2*v1[0]*C[0] + sqr(C[0]) + sqr(v1[1]) - 2*v1[1]*C[1] + sqr(C[1])
+        + sqr(v1[2]) - 2*v1[2]*C[2] + sqr(C[2]) - sqr(r);
+
+    quad = sqr(y) - 4*x*z;
+    if(quad <0){
+        return -1;
+    }
+    quad = sqrt(quad);
+
+    dist1 =(-y - quad)/(2*x);
+    if(dist1>0){
+        return dist1;
+    }
+    dist2 =(-y +quad)/(2*x);
+    if(dist2>0){
+        return dist2;
+    }
+    else{return -1;}
+
+
+
+
+
 
 
 }
 
-double* plane_intersection(double* v1, double* v2, double* C, double* n){
-    double distance;
-    double v1v2[3];
-    v1v2[3] = v2-v1;
-    double A = dot_product(n, v1, 3);
-    double B = dot_product(n, v1v2, 3);
-    //distance = dot_product(v1v2,n,3)/dot_product(v1,n,3);
-//    return A+(((distance-A)/B)*v1v2);
-return 1.0;
+double plane_intersection(double* v1, double* v2, double* C, double* n){
+    normalize(n);
+    double d, v,distance;
+    d= dot_product(n,v2, 3);
+    if(d == 0){
+        return -1;
+    }
+    v = -(dot_product(n,v1,3))+sqrt(sqr(C[0]-v1[0])+ sqr(C[1]-v1[1])+ sqr(C[2]-v1[2]));
+
+    distance = v/d;
+    if(distance>0){
+        return distance;
+    }else{return  -1;}
+
+}
+
+
+void do_raycast(int width, int height;){
+    ppm_data current;
+    ppm_data* ptr = buffer;
+    double x,y,z;
+    int height, width, i,j;
+
+    double v1[3] = {0,0,0};//makes the origin array
+    double v2[3] = {0,0,0};//makes the direction array
+    double v3[3] = {0,0,1};// makes the array we will add on to the z is +1 away from camera
+
+    //makes the current all 0 so if its not changed it stays 0
+    current.r = 0;
+    current.g = 0;
+    current.b = 0;
+
+    //sets cameras values because its position at 0,0,0, z +1 is accounted for in v3;
+    x=0;
+    y=0;
+    z=0;
+    //sets numbers so that it can loop width x height times(i x j)
+    i = width;
+    j = height;
+
+    //get the pixel size by dividing camera width and height by inputs width and height
+    
+
 }
 
 
@@ -332,131 +392,6 @@ void read_scene(char* filename) {
 
 
 
-//double cylinder_intersection(double* Ro, double* Rd,
-//			     double* C, double r) {
-//  // Step 1. Find the equation for the object you are
-//  // interested in..  (e.g., cylinder)
-//  //
-//  // x^2 + z^2 = r^2
-//  //
-//  // Step 2. Parameterize the equation with a center point
-//  // if needed
-//  //
-//  // (x-Cx)^2 + (z-Cz)^2 = r^2
-//  //
-//  // Step 3. Substitute the eq for a ray into our object
-//  // equation.
-//  //
-//  // (Rox + t*Rdx - Cx)^2 + (Roz + t*Rdz - Cz)^2 - r^2 = 0
-//  //
-//  // Step 4. Solve for t.
-//  //
-//  // Step 4a. Rewrite the equation (flatten).
-//  //
-//  // -r^2 +
-//  // t^2 * Rdx^2 +
-//  // t^2 * Rdz^2 +
-//  // 2*t * Rox * Rdx -
-//  // 2*t * Rdx * Cx +
-//  // 2*t * Roz * Rdz -
-//  // 2*t * Rdz * Cz +
-//  // Rox^2 -
-//  // 2*Rox*Cx +
-//  // Cx^2 +
-//  // Roz^2 -
-//  // 2*Roz*Cz +
-//  // Cz^2 = 0
-//  //
-//  // Steb 4b. Rewrite the equation in terms of t.
-//  //
-//  // t^2 * (Rdx^2 + Rdz^2) +
-//  // t * (2 * (Rox * Rdx - Rdx * Cx + Roz * Rdz - Rdz * Cz)) +
-//  // Rox^2 - 2*Rox*Cx + Cx^2 + Roz^2 - 2*Roz*Cz + Cz^2 - r^2 = 0
-//  //
-//  // Use the quadratic equation to solve for t..
-//  double a = (sqr(Rd[0]) + sqr(Rd[2]));
-//  double b = (2 * (Ro[0] * Rd[0] - Rd[0] * C[0] + Ro[2] * Rd[2] - Rd[2] * C[2]));
-//  double c = sqr(Ro[0]) - 2*Ro[0]*C[0] + sqr(C[0]) + sqr(Ro[2]) - 2*Ro[2]*C[2] + sqr(C[2]) - sqr(r);
-//
-//  double det = sqr(b) - 4 * a * c;
-//  if (det < 0) return -1;
-//
-//  det = sqrt(det);
-//
-//  double t0 = (-b - det) / (2*a);
-//  if (t0 > 0) return t0;
-//
-//  double t1 = (-b + det) / (2*a);
-//  if (t1 > 0) return t1;
-//
-//  return -1;
-//}
-//
-////int main() {
-////
-//  double cx = 0;
-//  double cy = 0;
-//  double h = 0.7;
-//  double w = 0.7;
-//
-//  int M = 20;
-//  int N = 20;
-//
-//  double pixheight = h / M;
-//  double pixwidth = w / N;
-//  int y =0;
-//  int x =0;
-//  for (y=0; y < M; y += 1) {
-//    for (x=0; x < N; x += 1) {
-//      double Ro[3] = {0, 0, 0};
-//      // Rd = normalize(P - Ro)
-//      double Rd[3] = {
-//	cx - (w/2) + pixwidth * (x + 0.5),
-//	cy - (h/2) + pixheight * (y + 0.5),
-//	1
-//      };
-//      normalize(Rd);
-//
-//      double best_t = INFINITY;
-////
-////	switch(objects[i]->kind) {
-////	case 0:
-////
-////	  break;
-////	default:
-////	  // Horrible error
-////	  exit(1);
-////	}
-////	if (t > 0 && t < best_t) best_t = t;
-////      }
-////      if (best_t > 0 && best_t != INFINITY) {
-////	printf("#");
-////      } else {
-////	printf(".");
-////	switch(objects[i]->kind) {
-////	case 0:
-////
-////	  break;
-////	default:
-////	  // Horrible error
-////	  exit(1);
-////	}
-////	if (t > 0 && t < best_t) best_t = t;
-////      }
-////      if (best_t > 0 && best_t != INFINITY) {
-////	printf("#");
-////      } else {
-////	printf(".");
-////      }
-//
-//    }
-//    printf("\n");
-//  }
-//
-//  return 0;
-//}
-
-
 int main(int argc, char** argv){
     Object scene[128];
     int width, height;
@@ -474,21 +409,22 @@ int main(int argc, char** argv){
 	width = atoi(argv[1]);
 	height = atoi(argv[2]);
 
+
 	if(width <=0 || height <=0){
         fprintf(stderr, "Width and Height must be more than 0");
         return -1;
 	}
-
 	read_scene(temp);
 	temp = argv[4];
 	if(strstr(temp, ".ppm")!=0){
         fprintf(stderr, "Not valid output file type");
         return -1;
     }
-	writePPM(argv[4])
+	//writePPM(argv[4],)
 	return 0;
 
 
 }
+
 
 
