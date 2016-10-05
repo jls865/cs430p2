@@ -172,6 +172,23 @@ void do_raycast(int width, int height, ppm_data* pdata){
 
             for(c=0; sizeof(object[c]) != 0; c++){
 
+                //plane
+                if(object[c].type ==0){
+                    plane_intersection(v1,v2,object[c].color,v3);
+
+                }
+                //sphere
+                else if(object[c].type == 1){
+                    sphere_intersection(v1,v2,object[c].sphere.color,object[c].sphere.radius)
+
+                }
+                //camera
+                else if(object[c].type == 2){
+                    break;
+
+
+                }
+                else{fprintf(stderr, "how did this make it past the first error?");}
             }
 
 
@@ -468,7 +485,8 @@ int main(int argc, char** argv){
     do_raycast(width,height,data);
 
 
-	//writePPM(argv[4],)
+
+	writePPM(argv[4],data,width,height);
 	return 0;
 
 
