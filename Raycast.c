@@ -459,17 +459,32 @@ void read_scene(char* filename) {
 
 int main(int argc, char** argv){
     Object scene[128];
+    int width, height;
 	if(argc!=5){
         fprintf(stderr, "Not valid input for program Raycast.c");
-        return 1;
+        return -1;
 	}
 
 	char* temp = argv[3];
-	if(strstr(temp, ".json")==0){
-        fprintf(stderr, "Not valid output file type");
-        return 1;
+	if(strstr(temp, ".json")!=0){
+        fprintf(stderr, "Not valid input file type");
+        return -1;
 	}
+
+	width = atoi(argv[1]);
+	height = atoi(argv[2]);
+
+	if(width <=0 || height <=0){
+        fprintf(stderr, "Width and Height must be more than 0");
+        return -1;
+	}
+
 	read_scene(temp);
+	temp = argv[4];
+	if(strstr(temp, ".ppm")!=0){
+        fprintf(stderr, "Not valid output file type");
+        return -1;
+    }
 	writePPM(argv[4])
 	return 0;
 
