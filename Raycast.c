@@ -59,31 +59,38 @@ void normalize(double* v) {
   v[1] /= len;
   v[2] /= len;
 }
-
+//writes the pixel data to the file in p6 format
 int writePPM(FILE* destination, ppm_data* data, int width, int height){
     FILE* fh = fopen(destination, "w");
+    //writes the header info of the p6 file
     fprintf(fh, "P6 %d %d 255\n", width, height);
+
+    //writes the pdata to the  file
     fwrite(data, sizeof(ppm_data), width*height, fh);
     fclose(fh);
 }
 
 double sphere_intersection(double* v1, double* v2, double* C, double r){
     double x,y,z,quad,dist1,dist2;
+    // uses the equations given, along with the quadratic equation
     x = sqr(v2[0])+sqr(v2[1])+sqr(v2[2]);
     y = (2 * (v1[0] * v2[0] - v2[0] * C[0] + v1[1] * v2[1] - v2[1] * C[1] + v1[2] * v2[2] - v2[2] * C[2]));
 	z = sqr(v1[0]) - 2*v1[0]*C[0] + sqr(C[0]) + sqr(v1[1]) - 2*v1[1]*C[1] + sqr(C[1])
         + sqr(v1[2]) - 2*v1[2]*C[2] + sqr(C[2]) - sqr(r);
 
-    quad = sqr(y) - 4*x*z;
+    //quadratic equation is calculated
+    quad = (sqr(y) - 4*x*z);
     if(quad <0){
         return -1;
     }
     quad = sqrt(quad);
 
+    // - x
     dist1 =(-y - quad)/(2*x);
     if(dist1>0){
         return dist1;
     }
+    //+x
     dist2 =(-y +quad)/(2*x);
     if(dist2>0){
         return dist2;
@@ -101,12 +108,16 @@ double sphere_intersection(double* v1, double* v2, double* C, double r){
 double plane_intersection(double* v1, double* v2, double* C, double* n){
     normalize(n);
     double d, v,distance;
+    //uses dot product to find the intersectiion points
     d= dot_product(n,v2, 3);
     if(d == 0){
         return -1;
     }
+    //gets the values of whether or not it intersects
     v = -(dot_product(n,v1,3))+sqrt(sqr(C[0]-v1[0])+ sqr(C[1]-v1[1])+ sqr(C[2]-v1[2]));
 
+
+    // if greater than 0  then we have found a point on the plane.
     distance = v/d;
     if(distance>0){
         return distance;
@@ -115,11 +126,12 @@ double plane_intersection(double* v1, double* v2, double* C, double* n){
 }
 
 
-void do_raycast(int width, int height;){
+void do_raycast(int width, int height, ppm_data* pdata){
     ppm_data current;
-    ppm_data* ptr;
-    double x,y,z,ph,pw;
-    int height, width, i,j;
+    double x,y,z,ph,pw, inf, ze;
+    int i,j,a,b,c;
+    inf = INFINITY;
+    ze = 0;
 
 
     double v1[3] = {0,0,0};//makes the origin array
@@ -140,8 +152,34 @@ void do_raycast(int width, int height;){
     j = height;
 
     //get the pixel size by dividing camera width and height by inputs width and height
-    ph = 0;
+    ph = cam_height/height;
+    pw = cam_width/width;
 
+
+    for(a=0; a<j; a++){
+
+        //finds the value for y
+        v3[1]= (y- (cam_height/2)+ ph * (a +.5));
+
+        for(b=0; b<i; b++){
+                //gets the x value for the ray direction
+            v3[0] = x-(cam_width/2) + pw * (b +.5);
+
+            v2[0] = v3[0];
+            v2[1] = v3[1];
+            v3[2]=  v3[2];
+            normalize(v3);
+
+            for(c=0; sizeof(object[c]) != 0; c++){
+
+            }
+
+
+
+
+        }
+
+    }
 }
 
 
@@ -399,6 +437,7 @@ void read_scene(char* filename) {
 
 int main(int argc, char** argv){
     Object scene[128];
+    ppm_data* data;
     int width, height;
 	if(argc!=5){
         fprintf(stderr, "Not valid input for program Raycast.c");
@@ -425,8 +464,8 @@ int main(int argc, char** argv){
         fprintf(stderr, "Not valid output file type");
         return -1;
     }
-    ppm_data* buffer = (ppm_data*)malloc(sizeof(ppm_data*) * width * height + 1);
-    do_raycast(width,height);
+    data = (ppm_data*)malloc(sizeof(ppm_data*) * width * height + 1);
+    do_raycast(width,height,data);
 
 
 	//writePPM(argv[4],)
