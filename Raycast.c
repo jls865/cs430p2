@@ -460,34 +460,37 @@ int main(int argc, char** argv){
     ppm_data* data;
     int width, height;
     //if too little arguments throw this
-	if(argc>5){
+	if(argc<4){
         fprintf(stderr, "Not valid input for program Raycast.c");
         return -1;
 	}
-    //
+    //checks if JSON file is valid or not
 	char* temp = argv[3];
 	if(strstr(temp, ".json")!=0){
         fprintf(stderr, "Not valid input file type");
         return -1;
 	}
-
+    //sets read in width/height
 	width = argv[1];
 	height = argv[2];
 
-
+    //checks for bad input
 	if(width <=0 || height <=0){
         fprintf(stderr, "Width and Height must be more than 0");
         return -1;
 	}
+	//calls functions to parse json file
 	read_scene(temp);
+	//sets string to  a temp to check if its a ppm file
 	temp = argv[4];
 	if(strstr(temp, ".ppm")!=0){
         fprintf(stderr, "Not valid output file type");
         return -1;
     }
+    //allocates the pixel data
     data = (ppm_data*)malloc(sizeof(ppm_data*) * width * height + 1);
+    //raycasts
     do_raycast(width,height,data);
-
 
 
 	writePPM(argv[4],data,width,height);
