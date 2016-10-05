@@ -3,14 +3,13 @@
 #include <math.h>
 #include <string.h>
 #include <ctype.h>
-
 // Polymorphism in C
 //Creates the 3 objects using a parent object struct.
 typedef struct {
   int type; // 0 = plane, 1 = sphere, 2 = camera
   double color[3];//color vector;
-  double height;//hieght of the view plane read in on command
-  double width;//width of viewplane read in on command;
+  double height;//height of the view plane read in on command
+  double width;//width of the view plane read in on cmd
   union {
     struct {
       double* position;
@@ -29,15 +28,14 @@ typedef struct {
   };
 } Object;
 
+
 typedef struct{
-	char magic_num;
-	int width;
-	int height;
-	int max_val;
-	double* vec[3];
+unsigned char r,g,b;
 
 }ppm_data;
 
+int line = 1;
+Object object[128];
 
 static inline double sqr(double v) {
   return v*v;
@@ -48,9 +46,10 @@ double dot_product(double* v1, double* v2, int n){
     int i;
     for(i=0;i<n;i++){
         result += v1[i]*v2[i];
+        return result;
     }
 }
-
+//hello
 
 static inline void normalize(double* v) {
   double len = sqrt(sqr(v[0]) + sqr(v[1]) + sqr(v[2]));
@@ -59,43 +58,12 @@ static inline void normalize(double* v) {
   v[2] /= len;
 }
 
-//void writePPM(FILE* destination){
-//    int i=0,j=0;
-//    ppm_data data;
-////opens the destination folder specified to write
-//FILE* fh = fopen(destination, "wb");
-//if(!fh) {
-//	fprintf(stderr, "Unable to open file");
-//	exit(1);
-//}
-////checks whether its p3 or p6 and adds it to the file accordingly
-//if(strcmp(&data.magic_num, "P3") == 0){
-//	fprintf(fh, "P3\n");
-//}
-//else if(strcmp(&data.magic_num, "P6") == 0){
-//	fprintf(fh,"P6\n");
-//
-////if it is not p3 or p6 error is thrown
-//}else{fprintf(stderr, "Error: Invalid PPM Type(magic number)");
-//
-////writes the data width/ height to the file with newline
-//fprintf(fh, "%d %d\n", data.width, data.height);
-//
-//fprintf(fh, "%d\n", data.max_val);
-//
-//for(i = 0; i<(data.width);i++){
-//        for(j =0; j<(data.height);i++){
-//            fprintf(fh, "%d %d %d");
-//        }
-////fprintf(fh, "%d %d %d  ", , data.vec[index], data.vec[index]);
-//}
-//fclose(fh);
-//}
-//
-//
-//}
-//
-
+int writePPM(FILE* destination, ppm_data* data, int width, int height){
+    FILE* fh = fopen(destination, "w");
+    fprintf(fh, "P6 %d %d 255\n", width, height);
+    fwrite(buffer, sizeof(Pixel), width*height, fh);
+    fclose(fh);
+}
 
 double sphere_intersection(double* Ro, double* Rd, double* C, double r){
 
@@ -104,21 +72,15 @@ double sphere_intersection(double* Ro, double* Rd, double* C, double r){
 
 double* plane_intersection(double* v1, double* v2, double* C, double* n){
     double distance;
-    double* v1v2 = v2-v1;
+    double v1v2[3];
+    v1v2[3] = v2-v1;
     double A = dot_product(n, v1, 3);
     double B = dot_product(n, v1v2, 3);
-    distance = dot_product(v1v2,n,3)/dot_product(v1,n);
-    return A+(((distance-A)/B)*v1v2);
-
+    //distance = dot_product(v1v2,n,3)/dot_product(v1,n,3);
+//    return A+(((distance-A)/B)*v1v2);
+return 1.0;
 }
 
-int main(int argc, char** argv){
-	
-	
-}
-
-int line = 1;
-Object object[128];
 
 // next_c() wraps the getc() function and provides error checking and line
 // number maintenance
@@ -146,7 +108,7 @@ void expect_c(FILE* json, int d) {
   fprintf(stderr, "Error: Expected '%c' on line %d.\n", d, line);
   exit(1);
 }
-	
+
 
 // skip_ws() skips white space in the file.
 void skip_ws(FILE* json) {
@@ -368,10 +330,7 @@ void read_scene(char* filename) {
   }
 }
 
-int main(int c, char** argv) {
-    read_scene(argv[2]);
-    return 0;
-}
+
 
 //double cylinder_intersection(double* Ro, double* Rd,
 //			     double* C, double r) {
@@ -496,3 +455,25 @@ int main(int c, char** argv) {
 //
 //  return 0;
 //}
+
+
+int main(int argc, char** argv){
+    Object scene[128];
+	if(argc!=5){
+        fprintf(stderr, "Not valid input for program Raycast.c");
+        return 1;
+	}
+
+	char* temp = argv[3];
+	if(strstr(temp, ".json")==0){
+        fprintf(stderr, "Not valid output file type");
+        return 1;
+	}
+	read_scene(temp);
+	writePPM(argv[4])
+	return 0;
+
+
+}
+
+
